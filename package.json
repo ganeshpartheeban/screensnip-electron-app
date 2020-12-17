@@ -1,5 +1,5 @@
 {
-    "name": "snipper",
+    "name": "Screen-Snip",
     "version": "1.0.0",
     "description": "Snipping tool build with Electron, React and Nodejs",
     "main": "./app/build/app.js",
@@ -13,9 +13,9 @@
         "postinstall": "electron-builder install-app-deps"
     },
     "author": {
-        "name": "Waleed Ahmad",
-        "email": "waleedgplus@gmail.com",
-        "url": "https://github.com/waleedahmad"
+        "name": "Ganesh Partheeban",
+        "email": "ganeshpartheeban@gmail.com",
+        "url": "https://github.com/ganeshpartheeban"
     },
     "license": "MIT",
     "build": {
@@ -62,6 +62,7 @@
         "axios": "^0.18.1",
         "body-parser": "^1.19.0",
         "bootstrap": "^4.5.3",
+        "date-fns": "^2.16.1",
         "express": "^4.17.1",
         "jimp": "^0.2.28",
         "jquery": "^3.5.1",

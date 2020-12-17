@@ -1,4 +1,5 @@
 import React, {Fragment} from 'react';
+import { getUnixTime } from 'date-fns'
 import './Snipper.scss';
 import Cropper from "./Cropper";
 
@@ -24,6 +25,7 @@ class Snipper extends React.Component{
         super(props);
         this.state = {
             view : this.getContext(),
+            screenCaptureProcess: false,
             save_controls : false,
             image : '',
             upload_url : 'http://127.0.0.1:8989/upload'
@@ -199,6 +201,43 @@ class Snipper extends React.Component{
         }, 200);
     }
 
+
+    timedCaptureScreen(coordinates,e){
+        console.log(coordinates)
+console.log(e)
+        mainWindow = this.getCurrentWindow();
+        mainWindow.minimize();
+        
+        setInterval(() => {
+           
+            this.getScreenShot((base64data) => {
+                console.log(base64data)
+                // add to buffer base64 image instead of saving locally in order to manipulate with Jimp
+                let encondedImageBuffer = new Buffer(base64data.replace(/^data:image\/(png|gif|jpeg);base64,/,''), 'base64');
+    
+                Jimp.read(encondedImageBuffer, (err, image) => {
+                    if (err) throw err;
+    
+                    let crop = coordinates ?
+                                image.crop(coordinates.x, coordinates.y, parseInt(coordinates.width, 10), parseInt(coordinates.height, 10)) :
+                                image.crop(0,0, screenSize.width, screenSize.height);
+    
+                    crop.getBase64('image/png', (err,base64data) =>{
+                        this.setState({
+                            image : base64data,
+                            // save_controls : true,
+                        });
+                        console.log(base64data)
+                        this.timedSaveToDisk();
+                        // this.resizeWindowFor('snip');
+                        // mainWindow.show();
+                    });
+                });
+            });
+        }, 10000);
+    }
+
+
     snip(state, e){
         this.getMainInstance().webContents.send('snip', state);
         this.destroyCurrentWindow(null);
@@ -231,6 +270,25 @@ class Snipper extends React.Component{
             save_controls : false,
         });
         this.resizeWindowFor('main');
+    }
+
+    timedSaveToDisk(e){
+        const directory = remote.app.getPath('pictures');
+        const filename = getUnixTime(new Date());
+        console.log(filename)
+        const filepath = path.join(directory + '/' + filename + '.png');
+        if (!fs.existsSync(directory)){
+            fs.mkdirSync(directory);
+        }
+        fs.writeFile(filepath, this.state.image.replace(/^data:image\/(png|gif|jpeg);base64,/,''), 'base64', (err) => {
+            if(err) console.log(err);
+            // shell.showItemInFolder(filepath);
+            this.setState({
+                image : '',
+                save_controls : false,
+            });
+            // this.discardSnip(null);
+        });
     }
 
     saveToDisk(e){
@@ -289,6 +347,20 @@ class Snipper extends React.Component{
                                     className="btn btn-primary mr-1"
                                     onClick={this.captureScreen.bind(this, null)}>
                                     Take Screenshot
+                                </button>
+
+                                <br></br>
+
+                                <button
+                                    className="btn btn-primary mr-1"
+                                    onClick={this.timedCaptureScreen.bind(this, null)}>
+                                    Start Work
+                                </button>
+
+                                <button
+                                    className="btn btn-primary mr-1"
+                                    onClick={this.timedCaptureScreen.bind(this, null)}>
+                                    Stop Work
                                 </button>
 
                                 {/* <button
